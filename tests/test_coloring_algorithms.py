@@ -5,7 +5,7 @@ from algorithms.registry import AlgorithmRegistry
 
 @pytest.fixture
 def scenario_model():
-    loader = ScenarioLoader("cases/scenarios/case_05_tawuran_pelajar.yaml")
+    loader = ScenarioLoader("cases/scenarios/case_05_graf_2_google_maps.yaml")
     return loader.build_graph_model()
 
 

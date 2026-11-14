@@ -16,7 +16,7 @@ JSON_INDENT = 2
 ENSURE_ASCII = False
 
 # --- DEFAULT SCENARIO ---
-DEFAULT_YAML_SCENARIO = CASES_DIR / "case_05_tawuran_pelajar.yaml"
+DEFAULT_YAML_SCENARIO = CASES_DIR / "case_05_graf_2_google_maps.yaml"
 
 # --- DEFAULT ALGORITHM (registry key atau alias kategori) ---
 DEFAULT_ALGORITHM = "dsatur"
