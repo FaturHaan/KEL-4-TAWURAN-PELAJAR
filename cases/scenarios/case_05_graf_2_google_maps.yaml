@@ -1,0 +1,338 @@
+case_id: case_05_graf_2_google_maps
+title: 'Graf 2: Rute Riil Sukabumi Google Maps 101 km (38 Simpul)'
+description: Model topologi rute riil 101 km antara SMKN 1 Sagaranten, SMKN 1 Agrabinta,
+  dan SMKN 1 Tegalbuleud (38 simpul jalan raya, 41 relasi sisi/konflik). Memiliki
+  bilangan kromatik chi(G) = 3 shift patroli pengawasan.
+algorithm: dsatur
+nodes:
+- id: 0
+  label: SMKN 1 Sagaranten
+  pos:
+  - 560.0
+  - -1200.0
+- id: 1
+  label: Pasar Sagaranten
+  pos:
+  - 560.0
+  - -1080.0
+- id: 2
+  label: Warung Simpang Tiga
+  pos:
+  - 560.0
+  - -720.0
+- id: 3
+  label: SDN TEGALLEGA
+  pos:
+  - 560.0
+  - -600.0
+- id: 4
+  label: Arsyad Copy Center
+  pos:
+  - 560.0
+  - -480.0
+- id: 5
+  label: Toko Riyanti
+  pos:
+  - 560.0
+  - -360.0
+- id: 6
+  label: Sungai Cidolog
+  pos:
+  - 560.0
+  - -240.0
+- id: 7
+  label: masjid jami AT'AQWA
+  pos:
+  - 560.0
+  - 0.0
+- id: 8
+  label: Kantor Desa Rambay
+  pos:
+  - 560.0
+  - 360.0
+- id: 9
+  label: Jembatan Gantung Rambay
+  pos:
+  - 640.0
+  - 440.0
+- id: 10
+  label: Madrasah Ibtidaiyah (MI) Rambay
+  pos:
+  - 440.0
+  - 481.0
+- id: 11
+  label: Warung Bensin Mang Ejeh
+  pos:
+  - 680.0
+  - 540.0
+- id: 12
+  label: Toko Babeh Wahyo
+  pos:
+  - 120.0
+  - 640.0
+- id: 13
+  label: Warung Mg Jejen
+  pos:
+  - 412.0
+  - 670.0
+- id: 14
+  label: TOKO haji Dadan ibu Rini
+  pos:
+  - -340.0
+  - 740.0
+- id: 15
+  label: Puncak Brengbreng Bojongkaso
+  pos:
+  - 468.0
+  - 780.0
+- id: 16
+  label: Masjid Nurul A'la Sempur Gemreng
+  pos:
+  - 800.0
+  - 880.0
+- id: 17
+  label: Dik'z Motor
+  pos:
+  - 970.0
+  - 920.0
+- id: 18
+  label: Warung Nien Thea Barokah
+  pos:
+  - 1420.0
+  - 920.0
+- id: 19
+  label: bengkel RINDU, IBU
+  pos:
+  - 1780.0
+  - 920.0
+- id: 20
+  label: Bank BRI UNIT Agrabinta
+  pos:
+  - 2060.0
+  - 940.0
+- id: 21
+  label: Pom bensin mini Kang Samsul
+  pos:
+  - 1260.0
+  - 960.0
+- id: 22
+  label: SMKN 1 Agrabinta
+  pos:
+  - 2180.0
+  - 990.0
+- id: 23
+  label: Warung nasi Dapoer Emak
+  pos:
+  - 520.0
+  - 1010.0
+- id: 24
+  label: Pos kamling Kp. Seklok Wangunjaya Agrabinta
+  pos:
+  - 30.0
+  - 1220.0
+- id: 25
+  label: Kota Santri An-Nabawi
+  pos:
+  - -590.0
+  - 1300.0
+- id: 26
+  label: Warung Jembatan Cibuni
+  pos:
+  - -90.0
+  - 1430.0
+- id: 27
+  label: Toko Alkautsar
+  pos:
+  - -470.0
+  - 1550.0
+- id: 28
+  label: Alfamart
+  pos:
+  - -220.0
+  - 1560.0
+- id: 29
+  label: Gia Shoes
+  pos:
+  - -230.0
+  - 1730.0
+- id: 30
+  label: Toko Aminah
+  pos:
+  - -280.0
+  - 2010.0
+- id: 31
+  label: SMKN 1 Tegalbuled
+  pos:
+  - -2240.0
+  - 2188.0
+- id: 32
+  label: Tb.Akim Trans Travel
+  pos:
+  - -610.0
+  - 2188.0
+- id: 33
+  label: Jembatan Benteng
+  pos:
+  - -940.0
+  - 2210.0
+- id: 34
+  label: Toko Sembako Haji Harma
+  pos:
+  - -2050.0
+  - 2230.0
+- id: 35
+  label: Kedai Seblak Wae Atub
+  pos:
+  - -1850.0
+  - 2230.0
+- id: 36
+  label: TOKO Eka
+  pos:
+  - -1360.0
+  - 2230.0
+- id: 37
+  label: Q and R Travel Jakarta Tegalbuleud
+  pos:
+  - -1590.0
+  - 2250.0
+edges:
+- from: 1
+  to: 0
+  weight: 1.0
+- from: 23
+  to: 17
+  weight: 1.0
+- from: 10
+  to: 8
+  weight: 1.0
+- from: 9
+  to: 8
+  weight: 1.0
+- from: 21
+  to: 17
+  weight: 1.0
+- from: 22
+  to: 0
+  weight: 1.0
+- from: 29
+  to: 28
+  weight: 1.0
+- from: 31
+  to: 0
+  weight: 1.0
+- from: 31
+  to: 22
+  weight: 1.0
+- from: 2
+  to: 1
+  weight: 1.0
+- from: 3
+  to: 2
+  weight: 1.0
+- from: 4
+  to: 3
+  weight: 1.0
+- from: 7
+  to: 6
+  weight: 1.0
+- from: 6
+  to: 5
+  weight: 1.0
+- from: 5
+  to: 4
+  weight: 1.0
+- from: 8
+  to: 7
+  weight: 1.0
+- from: 18
+  to: 21
+  weight: 1.0
+- from: 19
+  to: 18
+  weight: 1.0
+- from: 22
+  to: 20
+  weight: 1.0
+- from: 20
+  to: 19
+  weight: 1.0
+- from: 30
+  to: 29
+  weight: 1.0
+- from: 32
+  to: 30
+  weight: 1.0
+- from: 33
+  to: 32
+  weight: 1.0
+- from: 36
+  to: 33
+  weight: 1.0
+- from: 37
+  to: 36
+  weight: 1.0
+- from: 35
+  to: 37
+  weight: 1.0
+- from: 34
+  to: 35
+  weight: 1.0
+- from: 31
+  to: 34
+  weight: 1.0
+- from: 25
+  to: 14
+  weight: 1.0
+- from: 14
+  to: 12
+  weight: 1.0
+- from: 12
+  to: 10
+  weight: 1.0
+- from: 26
+  to: 24
+  weight: 1.0
+- from: 28
+  to: 26
+  weight: 1.0
+- from: 28
+  to: 27
+  weight: 1.0
+- from: 27
+  to: 25
+  weight: 1.0
+- from: 11
+  to: 9
+  weight: 1.0
+- from: 13
+  to: 11
+  weight: 1.0
+- from: 15
+  to: 13
+  weight: 1.0
+- from: 16
+  to: 15
+  weight: 1.0
+- from: 17
+  to: 16
+  weight: 1.0
+- from: 24
+  to: 23
+  weight: 1.0
+execution_plan:
+  start_node: 0
+  goal_node: 31
+  events:
+  - step: 1
+    type: CONFLICT_NODE_TRIGGER
+    target_node: 8
+    description: Bentrokan antar-kelompok pecah di Kantor Desa Rambay! Membutuhkan
+      alokasi shift darurat agar titik persinggungan terpisah.
+  - step: 2
+    type: CONFLICT_EDGE_TRIGGER
+    target_edge:
+    - 8
+    - 28
+    weight: 1.0
+    description: Konvoi massa memblokir jalur penghubung antara Kantor Desa Rambay
+      dan Alfamart.
