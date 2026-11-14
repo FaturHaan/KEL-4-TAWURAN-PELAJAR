@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Simulation & Benchmark Output Artifacts (JSON trace & plot snapshots)
+output/*.json
+output/*.png
+output/*.csv
+
