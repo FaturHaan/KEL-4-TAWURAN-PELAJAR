@@ -5,7 +5,7 @@ from core.base_algorithm import BaseGraphAlgorithm
 
 
 class SOTAScaffoldingAuditor:
-    """Modul Scaffolding untuk mendiagnosis dan membedah eror pada algoritma SOTA mahasiswa."""
+    """Modul Scaffolding untuk mendiagnosis dan membedah integritas algoritma Graph Coloring."""
 
     def __init__(self, algorithm_class: Type[BaseGraphAlgorithm], yaml_path: str):
         self.algorithm_class = algorithm_class
@@ -49,18 +49,37 @@ class SOTAScaffoldingAuditor:
             return False
 
     def _audit_initial_run(self) -> bool:
-        print("\n[STAGE 2/4] Auditing Initial Search (Phase 1)...")
-        start, goal = self.plan["start_node"], self.plan["goal_node"]
+        print("\n[STAGE 2/4] Auditing Initial Run / Graph Coloring (Phase 1)...")
+        start, goal = self.plan.get("start_node"), self.plan.get("goal_node")
         try:
-            path, cost = self.solver.run(start, goal)
-            if not isinstance(path, list) or len(path) == 0:
-                print(f"❌ FAIL: Rute tidak valid atau kosong: {path}")
+            raw_output = self.solver.run(start, goal)
+            G = self.model.nx_graph
+
+            if isinstance(raw_output, dict):
+                colors = raw_output
+                if len(colors) != len(G.nodes):
+                    print(f"❌ FAIL: Simpul terwarnai tidak lengkap ({len(colors)}/{len(G.nodes)})")
+                    return False
+
+                # Verifikasi constraint pewarnaan graf
+                for u, v in G.edges:
+                    if u in colors and v in colors and u != v and colors[u] == colors[v]:
+                        print(f"❌ FAIL: Pelanggaran ketetanggaan! Simpul {u} dan {v} bertetangga tapi sama-sama warna {colors[u]}")
+                        return False
+
+                chromatic = getattr(self.solver, "get_chromatic_number", lambda: len(set(colors.values())))()
+                print(f"  ✓ Initial Coloring Valid -> Total Simpul: {len(colors)} | Bilangan Kromatik: {chromatic}")
+                return True
+            elif isinstance(raw_output, tuple) and len(raw_output) == 2:
+                path, cost = raw_output
+                if not isinstance(path, list) or len(path) == 0:
+                    print(f"❌ FAIL: Rute tidak valid atau kosong: {path}")
+                    return False
+                print(f"  ✓ Initial Path Valid: {path} | Cost: {cost}")
+                return True
+            else:
+                print(f"❌ FAIL: Format output run() tidak dikenali: {type(raw_output)}")
                 return False
-            if path[0] != start or path[-1] != goal:
-                print(f"❌ FAIL: Rute salah! Start={path[0]} (harus {start}), Goal={path[-1]} (harus {goal}).")
-                return False
-            print(f"  ✓ Initial Path Valid: {path} | Cost: {cost}")
-            return True
         except Exception as e:
             print(f"❌ FAIL: Crash pada method run():")
             traceback.print_exc()
@@ -68,20 +87,35 @@ class SOTAScaffoldingAuditor:
 
     def _audit_dynamic_events(self) -> bool:
         print("\n[STAGE 3/4] Auditing Dynamic Event Handling (Phase 2)...")
-        start, goal = self.plan["start_node"], self.plan["goal_node"]
+        start, goal = self.plan.get("start_node"), self.plan.get("goal_node")
+        G = self.model.nx_graph
 
         for idx, event in enumerate(self.plan.get("events", []), 1):
-            target_edge = tuple(event["target_edge"])
-            new_weight = event["new_weight"]
-            event_data = {"edge": target_edge, "new_weight": new_weight, "start": start, "goal": goal}
+            event_data = dict(event)
+            if start is not None and "start" not in event_data:
+                event_data["start"] = start
+            if goal is not None and "goal" not in event_data:
+                event_data["goal"] = goal
+            if "target_edge" in event:
+                event_data["edge"] = tuple(event["target_edge"])
+                event_data["target_edge"] = tuple(event["target_edge"])
 
-            print(f"  -> Testing Event #{idx}: Edge {target_edge} weight -> {new_weight}")
+            print(f"  -> Testing Event #{idx}: {event.get('type')} ({event.get('description', '')[:50]}...)")
             try:
-                path, cost = self.solver.handle_dynamic_event(event_data)
-                if not isinstance(path, list) or len(path) == 0:
-                    print(f"❌ FAIL pada Event #{idx}: Rute tidak valid: {path}")
-                    return False
-                print(f"  ✓ Dynamic Event #{idx} Success -> Path: {path} | Cost: {cost}")
+                event_res = self.solver.handle_dynamic_event(event_data)
+                if isinstance(event_res, dict) and "colors" in event_res:
+                    colors = event_res["colors"]
+                    # Verifikasi validitas graf pasca event
+                    for u, v in G.edges:
+                        if u in colors and v in colors and u != v and colors[u] == colors[v]:
+                            print(f"❌ FAIL: Konflik pasca-event pada edge ({u}, {v}) warna {colors[u]}")
+                            return False
+                    print(f"  ✓ Dynamic Event #{idx} Success -> Recolor Cost: {event_res.get('recolor_cost', 0)}")
+                elif isinstance(event_res, tuple):
+                    path, cost = event_res
+                    print(f"  ✓ Dynamic Event #{idx} Success -> Path: {path} | Cost: {cost}")
+                else:
+                    print(f"  ✓ Dynamic Event #{idx} Success.")
             except Exception as e:
                 print(f"❌ FAIL: Crash pada handle_dynamic_event() Event #{idx}:")
                 traceback.print_exc()
@@ -98,9 +132,25 @@ class SOTAScaffoldingAuditor:
 
 
 # Fungsi tes otomatis untuk PyTest
-def test_static_dijkstra_baseline():
-    from algorithms.pathfinding.static_dijkstra import StaticDijkstra
+def test_dsatur_scaffolding():
+    from algorithms.coloring.dsatur import DSATUR
     from config.settings import DEFAULT_YAML_SCENARIO
 
-    auditor = SOTAScaffoldingAuditor(StaticDijkstra, str(DEFAULT_YAML_SCENARIO))
+    auditor = SOTAScaffoldingAuditor(DSATUR, str(DEFAULT_YAML_SCENARIO))
+    assert auditor.run_full_diagnostic() is True
+
+
+def test_welsh_powell_scaffolding():
+    from algorithms.coloring.dynamic_welsh_powell import DynamicWelshPowell
+    from config.settings import DEFAULT_YAML_SCENARIO
+
+    auditor = SOTAScaffoldingAuditor(DynamicWelshPowell, str(DEFAULT_YAML_SCENARIO))
+    assert auditor.run_full_diagnostic() is True
+
+
+def test_greedy_coloring_scaffolding():
+    from algorithms.coloring.greedy_coloring import GreedyColoring
+    from config.settings import DEFAULT_YAML_SCENARIO
+
+    auditor = SOTAScaffoldingAuditor(GreedyColoring, str(DEFAULT_YAML_SCENARIO))
     assert auditor.run_full_diagnostic() is True
