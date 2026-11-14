@@ -1,6 +1,6 @@
 import argparse
-import sys
 from pathlib import Path
+import sys
 from typing import List, Optional
 
 from algorithms.registry import AlgorithmRegistry, resolve_algorithm_key
@@ -34,12 +34,21 @@ def build_parser() -> argparse.ArgumentParser:
         "-a",
         "--algorithm",
         default=None,
-        help="Registry key/alias algoritma (mis. pathfinding, spanning_tree).",
+        help="Registry key/alias algoritma (mis. dsatur, dynamic_welsh_powell, greedy_coloring).",
+    )
+    parser.add_argument(
+        "--no-gui",
+        action="store_true",
+        help="Simpan snapshot visualisasi ke output/ tanpa menampilkan jendela GUI Matplotlib interaktif.",
     )
     return parser
 
 
-def run_single(yaml_path: Path, algorithm_override: Optional[str] = None) -> SimulationResult:
+def run_single(
+    yaml_path: Path,
+    algorithm_override: Optional[str] = None,
+    no_gui: bool = False,
+) -> SimulationResult:
     loader = ScenarioLoader(yaml_path)
     metadata = loader.get_metadata()
     plan = loader.get_execution_plan()
@@ -52,7 +61,7 @@ def run_single(yaml_path: Path, algorithm_override: Optional[str] = None) -> Sim
 
     runner = SimulationRunner(solver=solver, plan=plan, metadata=metadata)
     runner.attach(ConsoleReportObserver())
-    runner.attach(VisualizerSnapshotObserver(graph_model.nx_graph))
+    runner.attach(VisualizerSnapshotObserver(graph_model.nx_graph, show=not no_gui))
     runner.attach(TraceExportObserver(solver))
     return runner.execute()
 
@@ -62,7 +71,11 @@ def main(argv: Optional[List[str]] = None) -> None:
     scenario_paths = collect_scenario_paths(args.scenarios, include_all=args.all)
 
     for yaml_path in scenario_paths:
-        run_single(yaml_path, algorithm_override=args.algorithm)
+        run_single(
+            yaml_path,
+            algorithm_override=args.algorithm,
+            no_gui=args.no_gui,
+        )
 
 
 if __name__ == "__main__":

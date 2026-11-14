@@ -1,5 +1,7 @@
-from typing import Any, Dict
+from pathlib import Path
+from typing import Any, Dict, Optional
 
+from config.settings import OUTPUT_DIR
 from core.base_algorithm import BaseGraphAlgorithm
 from core.simulation_runner import RerouteResult, SimulationObserver, SimulationResult
 from core.visualizer import SimpleGraphVisualizer
@@ -46,12 +48,26 @@ class ConsoleReportObserver(SimulationObserver):
 
 
 class VisualizerSnapshotObserver(SimulationObserver):
-    """Observer untuk menampilkan visualisasi graf spasial Matplotlib."""
+    """Observer untuk menampilkan visualisasi graf spasial Matplotlib dan menyimpan snapshot gambar."""
 
-    def __init__(self, graph: Any):
+    def __init__(
+        self,
+        graph: Any,
+        show: bool = True,
+        save_dir: Optional[Path] = OUTPUT_DIR,
+    ):
         self.visualizer = SimpleGraphVisualizer(graph)
+        self.show = show
+        self.save_dir = save_dir
+        self.event_counter = 0
 
     def on_initial_route(self, result: SimulationResult) -> None:
+        case_id = result.metadata.get("case_id", "simulation")
+        algo = result.algorithm_name.lower()
+        save_path = None
+        if self.save_dir:
+            save_path = str(self.save_dir / f"snapshot_{case_id}_{algo}_initial.png")
+
         if result.colors:
             self.visualizer.draw_snapshot(
                 title=(
@@ -59,6 +75,8 @@ class VisualizerSnapshotObserver(SimulationObserver):
                     f"Pewarnaan Simpul ({result.algorithm_name}) | Total Shift: {result.chromatic_number}"
                 ),
                 colors=result.colors,
+                save_path=save_path,
+                show=self.show,
             )
         else:
             self.visualizer.draw_snapshot(
@@ -67,28 +85,47 @@ class VisualizerSnapshotObserver(SimulationObserver):
                     f"Rute Awal: {result.initial_path} (Cost: {result.initial_cost})"
                 ),
                 active_path=result.initial_path,
+                save_path=save_path,
+                show=self.show,
             )
+        if save_path:
+            print(f"[IMAGE] Snapshot graf awal disimpan ke: {save_path}")
 
     def on_reroute(self, result: SimulationResult, reroute: RerouteResult) -> None:
+        self.event_counter += 1
+        case_id = result.metadata.get("case_id", "simulation")
+        algo = result.algorithm_name.lower()
+        save_path = None
+        if self.save_dir:
+            save_path = str(
+                self.save_dir / f"snapshot_{case_id}_{algo}_event_{self.event_counter}.png"
+            )
+
         if reroute.colors:
             self.visualizer.draw_snapshot(
                 title=(
-                    f"Event Dinamis: {reroute.description}\n"
+                    f"Event Dinamis #{self.event_counter}: {reroute.description}\n"
                     f"Shift Pasca-Event | Recolor Cost: {reroute.recolor_cost} | Total Shift: {reroute.chromatic_number}"
                 ),
                 colors=reroute.colors,
                 highlighted_node=reroute.target_node,
                 highlighted_edge=reroute.target_edge,
+                save_path=save_path,
+                show=self.show,
             )
         else:
             self.visualizer.draw_snapshot(
                 title=(
-                    f"Event: {reroute.description}\n"
+                    f"Event #{self.event_counter}: {reroute.description}\n"
                     f"Rute Baru: {reroute.path} (Cost: {reroute.cost})"
                 ),
                 active_path=reroute.path,
                 highlighted_edge=reroute.target_edge,
+                save_path=save_path,
+                show=self.show,
             )
+        if save_path:
+            print(f"[IMAGE] Snapshot pasca-event #{self.event_counter} disimpan ke: {save_path}")
 
 
 class TraceExportObserver(SimulationObserver):
