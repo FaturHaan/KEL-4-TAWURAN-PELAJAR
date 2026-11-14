@@ -38,3 +38,7 @@ class AlgorithmRegistry:
 
 def resolve_algorithm_key(cli_override, plan, metadata, default) -> str:
     return cli_override or plan.get("algorithm") or metadata.get("algorithm") or default
+
+
+# Auto-load coloring package agar terdaftar saat AlgorithmRegistry digunakan
+import algorithms.coloring  # noqa: F401, E402

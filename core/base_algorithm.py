@@ -23,7 +23,7 @@ class BaseGraphAlgorithm(ABC):
         self.delta_logs = []
 
     @abstractmethod
-    def run(self, start_node: int, goal_node: int):
+    def run(self, start_node: Optional[int] = None, goal_node: Optional[int] = None, **kwargs):
         pass
 
     @abstractmethod
