@@ -326,8 +326,9 @@ execution_plan:
   - step: 1
     type: CONFLICT_NODE_TRIGGER
     target_node: 8
-    description: Bentrokan antar-kelompok pecah di Kantor Desa Rambay! Membutuhkan
-      alokasi shift darurat agar titik persinggungan terpisah.
+    description: Bentrokan pecah di Kp. Tagog Bayur; dalam pemodelan ini diwakili
+      oleh simpul terdekat Kantor Desa Rambay (node 8). Membutuhkan alokasi shift
+      darurat agar titik persinggungan terpisah.
   - step: 2
     type: CONFLICT_EDGE_TRIGGER
     target_edge:
