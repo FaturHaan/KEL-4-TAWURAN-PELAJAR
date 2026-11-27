@@ -3,31 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Graf Tawuran Pelajar - Kelompok 4</title>
+  <title>Optimasi Shift Patroli — Graph Coloring</title>
   <!-- Vis.js Network (Offline dari aset lokal) -->
   <script src="/assets/js/vis-network.min.js"></script>
   <style>
     :root {
-      --bg-main: #0b1120;
-      --bg-card: #1e293b;
-      --bg-card-hover: #334155;
-      --border-color: #334155;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg-canvas: #0f1217;
+      --bg-surface: #161a22;
+      --bg-elevated: #1d222c;
+      --bg-hover: #252b38;
+      --border: #262d3a;
+      --border-strong: #364052;
+      --text-main: #e6edf3;
+      --text-secondary: #9aa4b2;
+      --text-muted: #6b7687;
       --accent: #3b82f6;
       --accent-hover: #2563eb;
+      --accent-soft: rgba(59, 130, 246, 0.12);
       --danger: #ef4444;
-      --danger-hover: #dc2626;
+      --danger-soft: rgba(239, 68, 68, 0.12);
       --success: #10b981;
-      --warning: #f59e0b;
-      --shift-0: #3b82f6; /* Biru terang */
-      --shift-1: #f97316; /* Oranye hangat */
-      --shift-2: #10b981; /* Emerald hijau */
-      --shift-3: #a855f7; /* Ungu neon */
-      --shift-4: #ec4899; /* Pink neon */
-      --shift-5: #06b6d4; /* Cyan */
-      --shift-6: #eab308; /* Kuning */
-      --shift-uncolored: #334155; /* Abu netral uncolored */
+      --warning: #d97706;
+      --shift-0: #3b82f6;
+      --shift-1: #f97316;
+      --shift-2: #10b981;
+      --shift-3: #a855f7;
+      --shift-4: #ec4899;
+      --shift-5: #06b6d4;
+      --shift-6: #eab308;
+      --shift-uncolored: #2d3544;
     }
 
     * {
@@ -38,34 +42,45 @@
     }
 
     body {
-      background-color: var(--bg-main);
+      background-color: var(--bg-canvas);
       color: var(--text-main);
       display: flex;
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
+      font-size: 13px;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Top Navbar */
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+    /* Top Header */
     header {
-      background-color: var(--bg-card);
-      border-bottom: 1px solid var(--border-color);
-      padding: 10px 24px;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      height: 60px;
+      height: 52px;
       flex-shrink: 0;
       z-index: 10;
     }
 
-    .header-title h1 {
-      font-size: 16px;
-      font-weight: 700;
-      color: #fff;
+    .header-title {
       display: flex;
-      align-items: center;
-      gap: 8px;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .header-title h1 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: -0.01em;
     }
 
     .header-title p {
@@ -73,77 +88,89 @@
       color: var(--text-muted);
     }
 
-    .badge-group {
+    .header-actions {
       display: flex;
+      align-items: center;
       gap: 8px;
     }
 
     .badge {
       font-size: 11px;
       padding: 4px 10px;
-      border-radius: 9999px;
-      font-weight: 600;
-      background: rgba(59, 130, 246, 0.2);
-      color: #60a5fa;
-      border: 1px solid rgba(59, 130, 246, 0.4);
+      border-radius: 6px;
+      font-weight: 500;
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
     }
 
-    /* Main Container */
+    .badge-algo {
+      color: #60a5fa;
+      border-color: rgba(59, 130, 246, 0.3);
+      background: var(--accent-soft);
+    }
+
+    /* Main Workspace */
     .main-container {
       display: flex;
       flex: 1;
-      height: calc(100vh - 60px);
+      height: calc(100vh - 52px);
       overflow: hidden;
     }
 
-    /* Sidebar Controls */
+    /* Sidebar */
     aside {
-      width: 370px;
-      background-color: var(--bg-card);
-      border-right: 1px solid var(--border-color);
+      width: 344px;
+      background-color: var(--bg-surface);
+      border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      overflow-y: auto;
-      padding: 16px;
-      gap: 12px;
       flex-shrink: 0;
+      overflow: hidden;
     }
 
-    .card {
-      background-color: rgba(15, 23, 42, 0.7);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px 14px;
-    }
-
-    .card-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 8px;
+    .sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
       display: flex;
+      flex-direction: column;
+    }
+
+    .section {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section:last-child {
+      border-bottom: none;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      margin-bottom: 10px;
     }
 
-    label {
-      font-size: 12px;
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
       color: var(--text-muted);
-      margin-bottom: 6px;
-      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
+    /* Form Controls */
     select {
       width: 100%;
       padding: 8px 10px;
       border-radius: 6px;
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border);
       color: var(--text-main);
       font-size: 12px;
       outline: none;
+      cursor: pointer;
     }
 
     select:focus {
@@ -153,165 +180,311 @@
     .radio-group {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
+      margin-top: 10px;
     }
 
     .radio-btn {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 7px 10px;
+      gap: 10px;
+      padding: 8px 10px;
       border-radius: 6px;
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
+      border: 1px solid transparent;
       cursor: pointer;
-      font-size: 12px;
-      transition: all 0.2s;
+      transition: background-color 0.15s, border-color 0.15s;
+    }
+
+    .radio-btn input {
+      accent-color: var(--accent);
+      cursor: pointer;
     }
 
     .radio-btn:hover {
-      background-color: var(--bg-card-hover);
+      background-color: var(--bg-elevated);
     }
 
     .radio-btn.active {
-      border-color: var(--accent);
-      background-color: rgba(59, 130, 246, 0.15);
+      background-color: var(--accent-soft);
+      border-color: rgba(59, 130, 246, 0.35);
+    }
+
+    .radio-btn strong {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .radio-btn.active strong {
       color: #93c5fd;
+    }
+
+    .radio-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* Sidebar Tabs */
+    .tab-bar {
+      display: flex;
+      padding: 6px 18px 0;
+      gap: 18px;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--bg-surface);
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 8px 2px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      color: var(--text-main);
+      border-bottom-color: var(--accent);
       font-weight: 600;
     }
 
-    /* Action Buttons */
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* Buttons */
     .btn {
-      width: 100%;
-      padding: 9px 12px;
-      border: none;
+      padding: 7px 12px;
+      border: 1px solid transparent;
       border-radius: 6px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       justify-content: center;
       align-items: center;
       gap: 6px;
-      transition: all 0.2s;
+      transition: background-color 0.15s, border-color 0.15s, opacity 0.15s;
+      line-height: 1.3;
     }
 
     .btn:disabled {
-      opacity: 0.6;
+      opacity: 0.45;
       cursor: not-allowed;
     }
 
     .btn-primary {
       background-color: var(--accent);
-      color: white;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      color: #ffffff;
     }
 
     .btn-primary:hover:not(:disabled) {
       background-color: var(--accent-hover);
     }
 
-    .btn-danger {
-      background-color: var(--danger);
-      color: white;
-      margin-top: 6px;
-      font-size: 11px;
-      padding: 8px 10px;
-    }
-
-    .btn-danger:hover:not(:disabled) {
-      background-color: var(--danger-hover);
-    }
-
     .btn-secondary {
-      background-color: var(--bg-card-hover);
+      background-color: var(--bg-elevated);
       color: var(--text-main);
-      border: 1px solid var(--border-color);
-      font-size: 12px;
-      padding: 7px 10px;
+      border-color: var(--border);
     }
 
     .btn-secondary:hover:not(:disabled) {
-      background-color: #475569;
+      background-color: var(--bg-hover);
+      border-color: var(--border-strong);
     }
 
     .btn-warning {
-      background-color: #d97706;
-      color: white;
+      background-color: var(--warning);
+      color: #ffffff;
     }
+
     .btn-warning:hover:not(:disabled) {
       background-color: #b45309;
     }
 
-    /* Playback Controls Box */
-    .playback-ctrl-grid {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 8px;
+    .btn-danger-outline {
+      width: 100%;
+      justify-content: flex-start;
+      text-align: left;
+      background-color: var(--danger-soft);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.28);
+      padding: 8px 10px;
+      font-size: 12px;
+      margin-top: 6px;
     }
 
-    .playback-slider-box {
-      background: rgba(15, 23, 42, 0.5);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 8px 10px;
-      margin-bottom: 8px;
+    .btn-danger-outline:hover:not(:disabled) {
+      background-color: rgba(239, 68, 68, 0.22);
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #ffffff;
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+      color: #ffffff;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background-color: #dc2626;
+    }
+
+    .btn-icon {
+      padding: 7px 10px;
+      min-width: 34px;
+    }
+
+    /* Playback Controls */
+    .playback-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .status-pill {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .slider-wrap {
+      margin-bottom: 12px;
+    }
+
+    .slider-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 4px;
+      color: var(--text-secondary);
+    }
+
+    .slider-meta strong {
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
     }
 
     .step-slider {
       -webkit-appearance: none;
       width: 100%;
-      height: 6px;
-      border-radius: 3px;
-      background: #334155;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border-strong);
       outline: none;
       cursor: pointer;
-      margin: 6px 0;
     }
 
     .step-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
-      background: #38bdf8;
+      background: var(--text-main);
       cursor: pointer;
-      box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
-      border: 2px solid #ffffff;
-      transition: transform 0.1s;
+      border: 2px solid var(--accent);
     }
 
-    .step-slider::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
+    .speed-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary);
     }
 
-    /* Metrics Grid */
+    .speed-row select {
+      width: auto;
+      padding: 5px 8px;
+      font-size: 11px;
+    }
+
+    .detail-callout {
+      margin-top: 12px;
+      padding: 9px 11px;
+      background-color: var(--bg-elevated);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 6px 6px 0;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+    }
+
+    .shortcut-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+
+    /* Incident & Events */
+    .helper-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .incident-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .incident-actions .btn {
+      flex: 1;
+    }
+
+    .btn-toggle.active {
+      background-color: var(--accent-soft);
+      border-color: rgba(59, 130, 246, 0.45);
+      color: #93c5fd;
+    }
+
+    /* Pinned Bottom Metrics */
+    .metrics-panel {
+      background-color: var(--bg-surface);
+      border-top: 1px solid var(--border);
+      padding: 14px 18px;
+      flex-shrink: 0;
+    }
+
     .metrics-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
     }
 
-    .metric-box {
-      background-color: rgba(30, 41, 59, 0.8);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 8px 10px;
-      text-align: center;
+    .metric-item {
+      display: flex;
+      flex-direction: column;
     }
 
     .metric-val {
-      font-size: 18px;
-      font-weight: 800;
-      color: #38bdf8;
-      transition: all 0.2s;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
     }
 
     .metric-label {
       font-size: 10px;
       color: var(--text-muted);
-      text-transform: uppercase;
       margin-top: 2px;
     }
 
@@ -319,23 +492,36 @@
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-top: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
     }
 
     .shift-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       font-size: 11px;
       padding: 3px 8px;
       border-radius: 4px;
-      font-weight: 600;
-      color: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .shift-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
     }
 
     /* Canvas Area */
     .canvas-container {
       flex: 1;
       position: relative;
-      background-color: #0b1120;
+      background-color: var(--bg-canvas);
       overflow: hidden;
     }
 
@@ -344,7 +530,7 @@
       height: 100%;
     }
 
-    /* Map Overlay Toolbar */
+    /* Canvas Overlay Toolbar */
     .canvas-overlay {
       position: absolute;
       top: 14px;
@@ -352,159 +538,153 @@
       right: 14px;
       display: flex;
       justify-content: space-between;
+      align-items: center;
       pointer-events: none;
       z-index: 5;
     }
 
     .legend-card {
       pointer-events: auto;
-      background-color: rgba(30, 41, 59, 0.92);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--border-color);
+      background-color: rgba(22, 26, 34, 0.92);
+      border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 8px 14px;
+      padding: 7px 12px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       font-size: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      color: var(--text-secondary);
     }
 
     .legend-item {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-weight: 600;
+      font-weight: 500;
     }
 
     .legend-dot {
-      width: 14px;
-      height: 14px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 0 6px rgba(0,0,0,0.5);
     }
 
     .zoom-toolbar {
       pointer-events: auto;
       display: flex;
-      gap: 6px;
+      background-color: rgba(22, 26, 34, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
     }
 
     .tool-btn {
-      background-color: rgba(30, 41, 59, 0.92);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--border-color);
-      color: white;
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--border);
+      color: var(--text-secondary);
       min-width: 34px;
-      height: 34px;
-      padding: 0 8px;
-      border-radius: 6px;
+      height: 32px;
+      padding: 0 10px;
       display: flex;
       justify-content: center;
       align-items: center;
       cursor: pointer;
-      font-weight: 700;
+      font-weight: 500;
       font-size: 12px;
-      gap: 4px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      transition: all 0.2s;
+      transition: background-color 0.15s, color 0.15s;
+    }
+
+    .tool-btn:last-child {
+      border-right: none;
     }
 
     .tool-btn:hover {
-      background-color: var(--accent);
-      border-color: var(--accent);
+      background-color: var(--bg-hover);
+      color: var(--text-main);
     }
 
     .tool-btn.active {
-      background-color: rgba(59, 130, 246, 0.3);
-      border-color: var(--accent);
-      color: #60a5fa;
+      background-color: var(--accent-soft);
+      color: #93c5fd;
     }
 
     /* Event Notification Banner */
     .event-banner {
       position: absolute;
-      top: 60px;
+      top: 58px;
       left: 50%;
       transform: translateX(-50%);
-      background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(185, 28, 28, 0.95));
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      padding: 10px 18px;
-      border-radius: 8px;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-left: 3px solid var(--danger);
+      color: var(--text-main);
+      padding: 10px 16px;
+      border-radius: 6px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      gap: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
       z-index: 20;
-      animation: slideDown 0.3s ease-out;
-      max-width: 650px;
-    }
-
-    @keyframes slideDown {
-      from { top: 20px; opacity: 0; }
-      to { top: 60px; opacity: 1; }
-    }
-
-    .event-banner-icon {
-      font-size: 20px;
+      max-width: 580px;
     }
 
     .event-banner-text {
       font-size: 12px;
-      line-height: 1.4;
+      line-height: 1.45;
+      color: var(--text-secondary);
+    }
+
+    .event-banner-text strong {
+      color: var(--text-main);
     }
 
     .event-banner-close {
       background: none;
       border: none;
-      color: white;
-      font-size: 18px;
+      color: var(--text-muted);
+      font-size: 16px;
       cursor: pointer;
-      opacity: 0.8;
+      line-height: 1;
     }
 
     .event-banner-close:hover {
-      opacity: 1;
+      color: var(--text-main);
     }
 
-    /* Node Detail Toast */
+    /* Node Detail Panel */
     .node-detail-panel {
       position: absolute;
       bottom: 16px;
       right: 16px;
-      max-width: 380px;
-      background-color: rgba(30, 41, 59, 0.95);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--border-color);
+      width: 320px;
+      background-color: rgba(22, 26, 34, 0.96);
+      border: 1px solid var(--border-strong);
       border-radius: 8px;
       padding: 14px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
       font-size: 12px;
       display: none;
       z-index: 15;
     }
 
     .node-detail-header {
-      font-weight: 700;
-      color: #38bdf8;
+      font-weight: 600;
+      color: var(--text-main);
       margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
+      align-items: center;
       font-size: 13px;
     }
 
     /* Modal Benchmark */
     .modal-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(4px);
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
       display: none;
       justify-content: center;
       align-items: center;
@@ -512,39 +692,54 @@
     }
 
     .modal-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
       width: 620px;
-      max-width: 90vw;
-      padding: 22px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+      max-width: 92vw;
+      padding: 20px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
     }
 
     .modal-header {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       margin-bottom: 16px;
-      font-size: 15px;
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 600;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     th, td {
       padding: 9px 12px;
-      border: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border);
       text-align: left;
     }
 
     th {
-      background-color: rgba(15, 23, 42, 0.9);
-      color: #38bdf8;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .tag-sota {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 6px;
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: 4px;
+      background: var(--accent-soft);
+      color: #60a5fa;
     }
   </style>
 </head>
@@ -553,197 +748,192 @@
   <!-- Top Navigation Header -->
   <header>
     <div class="header-title">
-      <h1><span>🗺️</span> Optimasi Shift Patroli Tawuran Pelajar (Graph Coloring)</h1>
-      <p>Kelompok 4 (Kasus 05) - D4 Teknik Informatika, Politeknik Negeri Bandung</p>
+      <h1>Optimasi Shift Patroli — Graph Coloring</h1>
+      <p>Kelompok 4 · Kasus 05</p>
     </div>
-    <div class="badge-group">
-      <span class="badge" id="top-scenario-badge">Graf 2: Google Maps (101 km)</span>
-      <span class="badge" id="top-algo-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.4);">DSATUR (SOTA)</span>
+    <div class="header-actions">
+      <span class="badge" id="top-scenario-badge">Graf 2: Rute Riil Google Maps 101 km</span>
+      <span class="badge badge-algo" id="top-algo-badge">DSATUR (SOTA)</span>
+      <button class="btn btn-secondary" onclick="openBenchmarkModal()">Benchmark 3 Algoritma</button>
     </div>
   </header>
 
   <!-- Main Workspace -->
   <div class="main-container">
 
-    <!-- Controls Sidebar -->
+    <!-- Sidebar -->
     <aside>
-      <!-- Skenario Dropdown -->
-      <div class="card">
-        <div class="card-title">📁 Pilih Skenario Graf</div>
-        <label for="scenario-select">Data Graf Topologi:</label>
-        <select id="scenario-select" onchange="onScenarioChanged()">
-          <option value="case_05_graf_2_google_maps" selected>Graf 2: Rute Riil Google Maps 101 km (38 Simpul)</option>
-          <option value="case_05_graf_1_persimpangan">Graf 1: Jaringan Persimpangan (23 Simpul)</option>
-        </select>
-      </div>
+      <div class="sidebar-scroll">
 
-      <!-- Algoritma Radio Buttons -->
-      <div class="card">
-        <div class="card-title">🧠 Pilih Algoritma Coloring</div>
-        <div class="radio-group">
-          <div class="radio-btn active" data-algo="dsatur" onclick="selectAlgorithm('dsatur')">
-            <input type="radio" name="algo" checked>
-            <div>
-              <strong>DSATUR (Degree of Saturation)</strong>
-              <div style="font-size: 10px; color: var(--text-muted)">Algoritma SOTA - Prioritas simpul paling jenuh</div>
-            </div>
+        <!-- Skenario & Algoritma -->
+        <div class="section">
+          <div class="section-header">
+            <span class="section-title">Konfigurasi Graf</span>
           </div>
-          <div class="radio-btn" data-algo="dynamic_welsh_powell" onclick="selectAlgorithm('dynamic_welsh_powell')">
-            <input type="radio" name="algo">
-            <div>
-              <strong>Dynamic Welsh-Powell</strong>
-              <div style="font-size: 10px; color: var(--text-muted)">Urutan Largest-First berbasis derajat simpul</div>
-            </div>
-          </div>
-          <div class="radio-btn" data-algo="greedy_coloring" onclick="selectAlgorithm('greedy_coloring')">
-            <input type="radio" name="algo">
-            <div>
-              <strong>Greedy Coloring (Sequential)</strong>
-              <div style="font-size: 10px; color: var(--text-muted)">Metode dasar sekuensial sederhana</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Interactive Playback Controller Card -->
-      <div class="card" id="playback-card">
-        <div class="card-title" style="justify-content: space-between;">
-          <span><span>🎮</span> Kontrol Animasi Pewarnaan</span>
-          <span id="playback-status" style="font-size: 10px; padding: 2px 7px; border-radius: 9999px; background: rgba(148,163,184,0.15); color: var(--text-muted); letter-spacing: 0;">Siaga</span>
-        </div>
-
-        <!-- Play / Pause & Reset Buttons -->
-        <div class="playback-ctrl-grid">
-          <button class="btn btn-primary" id="btn-play-pause" onclick="togglePlayPause()" style="flex: 2;">
-            <span id="play-pause-icon">▶️</span> <span id="play-pause-text">Jalankan Animasi</span>
-          </button>
-          <button class="btn btn-secondary" onclick="resetSteps()" title="Reset ke Langkah 0 (Semua Abu-abu)" style="flex: 1;">
-            🔄 Reset
-          </button>
-        </div>
-
-        <!-- Step Forward & Backward Buttons -->
-        <div class="playback-ctrl-grid">
-          <button class="btn btn-secondary" onclick="stepBackward()" id="btn-prev" title="Mundur 1 Langkah (Panah Kiri)">
-            ⏮️ Mundur
-          </button>
-          <button class="btn btn-secondary" onclick="stepForward()" id="btn-next" title="Maju 1 Langkah (Panah Kanan)">
-            Maju ⏭️
-          </button>
-        </div>
-
-        <!-- Scrubber Range Slider -->
-        <div class="playback-slider-box">
-          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
-            <span style="color: var(--text-muted);">Progres Langkah:</span>
-            <strong id="step-counter-text" style="color: #38bdf8;">0 / 38</strong>
-          </div>
-          <input type="range" class="step-slider" id="step-slider" min="0" max="38" value="0" oninput="onSliderScrub(this.value)">
-          <div style="display: flex; justify-content: space-between; font-size: 9px; color: #64748b;">
-            <span>Awal (Netral)</span>
-            <span>Selesai</span>
-          </div>
-        </div>
-
-        <!-- Speed Dropdown -->
-        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
-          <span style="color: var(--text-muted);">⏱️ Kecepatan:</span>
-          <select id="speed-select" onchange="changeSpeed(this.value)" style="width: auto; padding: 4px 8px; font-size: 11px;">
-            <option value="2500">2.5 detik (Sangat Lambat)</option>
-            <option value="1500">1.5 detik (Lambat)</option>
-            <option value="1000" selected>1 detik (Santai - Rekomendasi)</option>
-            <option value="600">600 ms (Standar)</option>
-            <option value="300">300 ms (Cepat)</option>
-            <option value="120">120 ms (Kilat)</option>
+          <select id="scenario-select" onchange="onScenarioChanged()">
+            <option value="case_05_graf_2_google_maps" selected>Graf 2: Rute Riil Google Maps 101 km (38 Simpul)</option>
+            <option value="case_05_graf_1_persimpangan">Graf 1: Jaringan Persimpangan (23 Simpul)</option>
           </select>
-        </div>
 
-        <!-- Step Explanation Callout -->
-        <div id="step-detail-box" style="margin-top: 10px; padding: 8px 10px; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border-color); border-radius: 6px; font-size: 11px; line-height: 1.45; color: #cbd5e1; display: none;">
-          <div style="font-weight: 700; color: #facc15; margin-bottom: 2px;" id="step-detail-title">Detail Langkah</div>
-          <div id="step-detail-desc">-</div>
-        </div>
-
-        <div style="font-size: 10px; color: #64748b; margin-top: 8px; text-align: center;">
-          ⌨️ <em>Shortcut: Spacebar (Play/Pause) | Panah Kiri/Kanan (Maju/Mundur)</em>
-        </div>
-      </div>
-
-      <!-- Event Injection (Live Demo) -->
-      <div class="card" id="event-card">
-        <div class="card-title">⚡ Simulasi Kejadian Dinamis</div>
-        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
-          Picu bentrokan dadak untuk mendemokan <em>dynamic recoloring</em>:
-        </div>
-        <div id="events-container">
-          <!-- Tombol Event Dinamis akan di-generate otomatis -->
-        </div>
-      </div>
-
-      <div class="card" id="incident-card">
-        <div class="card-title">🚨 Simulasi Kronologi Kejadian</div>
-        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.45;">
-          Perkiraan alur pergerakan rombongan dari SMKN 1 Sagaranten ke titik konflik (11 Jan 2025), disusun dari sumber berita. Bukan data statistik dan bukan pernyataan bahwa suatu ruas aman secara absolut.
-        </div>
-        <button class="btn btn-secondary" id="btn-incident" onclick="startIncidentSimulation()" style="width: 100%;">▶️ Putar Simulasi Kejadian</button>
-        <button class="tool-btn" id="btn-risk-layer" onclick="toggleRiskLayer()" style="width: 100%; margin-top: 6px; justify-content: center;">⚠️ Risk Layer: Off</button>
-
-        <div id="risk-legend" style="display: none; margin-top: 8px; padding: 7px 8px; background: rgba(15,23,42,0.9); border: 1px solid var(--border-color); border-radius: 6px; font-size: 10px; line-height: 1.6;"><div id="risk-legend-items"></div></div>
-
-        <div id="incident-controls" style="display: none; margin-top: 8px;">
-          <div class="playback-ctrl-grid">
-            <button class="btn btn-secondary" onclick="incidentPrev()">⏮️ Mundur</button>
-            <button class="btn btn-danger" id="btn-incident-play" onclick="incidentTogglePlay()">⏸️ Jeda</button>
-            <button class="btn btn-secondary" onclick="incidentNext()">Maju ⏭️</button>
-          </div>
-          <div style="margin-top: 7px;">
-            <div style="display: flex; justify-content: space-between; font-size: 11px;">
-              <span style="color: var(--text-muted);">Kronologi:</span>
-              <strong id="incident-counter" style="color: #facc15;">0 / 0</strong>
+          <div class="radio-group">
+            <div class="radio-btn active" data-algo="dsatur" onclick="selectAlgorithm('dsatur')">
+              <input type="radio" name="algo" checked>
+              <div>
+                <strong>DSATUR (Degree of Saturation)</strong>
+                <div class="radio-sub">Prioritas simpul paling jenuh (SOTA)</div>
+              </div>
             </div>
-            <input type="range" class="step-slider" id="incident-slider" min="0" max="0" value="0" oninput="onIncidentScrub(this.value)">
+            <div class="radio-btn" data-algo="dynamic_welsh_powell" onclick="selectAlgorithm('dynamic_welsh_powell')">
+              <input type="radio" name="algo">
+              <div>
+                <strong>Dynamic Welsh-Powell</strong>
+                <div class="radio-sub">Urutan Largest-First berdasarkan derajat</div>
+              </div>
+            </div>
+            <div class="radio-btn" data-algo="greedy_coloring" onclick="selectAlgorithm('greedy_coloring')">
+              <input type="radio" name="algo">
+              <div>
+                <strong>Greedy Coloring</strong>
+                <div class="radio-sub">Pewarnaan sekuensial dasar</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div id="incident-detail" style="display: none; margin-top: 8px; padding: 8px 10px; background: rgba(15,23,42,0.9); border: 1px solid var(--border-color); border-radius: 6px; font-size: 11px; line-height: 1.5; color: #cbd5e1;">
-          <div id="incident-phase" style="font-weight: 700; color: #facc15; margin-bottom: 3px;"></div>
-          <div id="incident-narrative"></div>
-          <div id="incident-meta" style="margin-top: 5px;"></div>
-          <div id="incident-sources" style="margin-top: 5px; font-size: 10px;"></div>
+        <!-- Tab Switcher -->
+        <div class="tab-bar">
+          <button class="tab-btn active" id="tab-btn-pewarnaan" onclick="switchSidebarTab('pewarnaan')">Pewarnaan</button>
+          <button class="tab-btn" id="tab-btn-simulasi" onclick="switchSidebarTab('simulasi')">Simulasi &amp; Insiden</button>
         </div>
+
+        <!-- Tab 1: Kontrol Animasi Pewarnaan -->
+        <div class="tab-panel active" id="tab-panel-pewarnaan">
+          <div class="section" id="playback-card">
+            <div class="section-header">
+              <span class="section-title">Kontrol Animasi</span>
+              <span id="playback-status" class="status-pill">Siaga</span>
+            </div>
+
+            <div class="playback-row">
+              <button class="btn btn-primary" id="btn-play-pause" onclick="togglePlayPause()" style="flex: 1;">
+                <span id="play-pause-icon" style="display:inline-flex;align-items:center;">
+                  <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor"><polygon points="2,1 11,6 2,11"/></svg>
+                </span>
+                <span id="play-pause-text">Jalankan</span>
+              </button>
+              <button class="btn btn-secondary btn-icon" onclick="stepBackward()" id="btn-prev" title="Mundur 1 Langkah (Panah Kiri)">&#8592;</button>
+              <button class="btn btn-secondary btn-icon" onclick="stepForward()" id="btn-next" title="Maju 1 Langkah (Panah Kanan)">&#8594;</button>
+              <button class="btn btn-secondary" onclick="resetSteps()" title="Reset ke Langkah 0">Reset</button>
+            </div>
+
+            <div class="slider-wrap">
+              <div class="slider-meta">
+                <span>Langkah</span>
+                <strong id="step-counter-text">0 / 38</strong>
+              </div>
+              <input type="range" class="step-slider" id="step-slider" min="0" max="38" value="0" oninput="onSliderScrub(this.value)">
+            </div>
+
+            <div class="speed-row">
+              <span>Kecepatan animasi</span>
+              <select id="speed-select" onchange="changeSpeed(this.value)">
+                <option value="2500">2.5 detik (Sangat Lambat)</option>
+                <option value="1500">1.5 detik (Lambat)</option>
+                <option value="1000" selected>1 detik (Standar)</option>
+                <option value="600">600 ms (Sedang)</option>
+                <option value="300">300 ms (Cepat)</option>
+                <option value="120">120 ms (Kilat)</option>
+              </select>
+            </div>
+
+            <div id="step-detail-box" class="detail-callout" style="display: none;">
+              <div style="font-weight: 600; color: var(--text-main); margin-bottom: 3px;" id="step-detail-title">Detail Langkah</div>
+              <div id="step-detail-desc">-</div>
+            </div>
+
+            <div class="shortcut-hint">
+              Shortcut: Space (Play/Pause) · Panah Kiri/Kanan · R (Reset)
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Kejadian Dinamis & Kronologi -->
+        <div class="tab-panel" id="tab-panel-simulasi">
+          <div class="section" id="event-card">
+            <div class="section-header">
+              <span class="section-title">Kejadian Dinamis</span>
+            </div>
+            <div class="helper-text">
+              Picu konflik mendadak untuk melihat proses <em>dynamic recoloring</em> pada pos terdampak.
+            </div>
+            <div id="events-container"></div>
+          </div>
+
+          <div class="section" id="incident-card">
+            <div class="section-header">
+              <span class="section-title">Kronologi Insiden (11 Jan 2025)</span>
+            </div>
+            <div class="helper-text">
+              Simulasi alur pergerakan rombongan dari SMKN 1 Sagaranten ke Tagog Bayur berdasarkan sumber berita.
+            </div>
+            <div class="incident-actions">
+              <button class="btn btn-secondary" id="btn-incident" onclick="startIncidentSimulation()">Putar Simulasi</button>
+              <button class="btn btn-secondary btn-toggle" id="btn-risk-layer" onclick="toggleRiskLayer()">Risk Layer: Off</button>
+            </div>
+
+            <div id="risk-legend" class="detail-callout" style="display: none; border-left-color: var(--warning);">
+              <div id="risk-legend-items"></div>
+            </div>
+
+            <div id="incident-controls" style="display: none; margin-top: 12px;">
+              <div class="playback-row">
+                <button class="btn btn-secondary btn-icon" onclick="incidentPrev()" title="Mundur">&#8592;</button>
+                <button class="btn btn-danger" id="btn-incident-play" onclick="incidentTogglePlay()" style="flex: 1;">Jeda</button>
+                <button class="btn btn-secondary btn-icon" onclick="incidentNext()" title="Maju">&#8594;</button>
+              </div>
+              <div class="slider-wrap" style="margin-bottom: 0;">
+                <div class="slider-meta">
+                  <span>Kronologi</span>
+                  <strong id="incident-counter">0 / 0</strong>
+                </div>
+                <input type="range" class="step-slider" id="incident-slider" min="0" max="0" value="0" oninput="onIncidentScrub(this.value)">
+              </div>
+            </div>
+
+            <div id="incident-detail" class="detail-callout" style="display: none;">
+              <div id="incident-phase" style="font-weight: 600; color: #facc15; margin-bottom: 4px;"></div>
+              <div id="incident-narrative"></div>
+              <div id="incident-meta" style="margin-top: 6px;"></div>
+              <div id="incident-sources" style="margin-top: 4px; font-size: 10px;"></div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Live Statistics Cards -->
-      <div class="card">
-        <div class="card-title">📊 Metrik Hasil Pewarnaan</div>
+      <!-- Pinned Bottom Metrics -->
+      <div class="metrics-panel">
         <div class="metrics-grid">
-          <div class="metric-box">
+          <div class="metric-item">
             <div class="metric-val" id="metric-chi">-</div>
-            <div class="metric-label">Bilangan Kromatik &chi;(G)</div>
+            <div class="metric-label">Shift &chi;(G)</div>
           </div>
-          <div class="metric-box">
+          <div class="metric-item">
             <div class="metric-val" id="metric-runtime">-</div>
-            <div class="metric-label">Runtime (ms)</div>
+            <div class="metric-label">Runtime</div>
           </div>
-          <div class="metric-box">
+          <div class="metric-item">
             <div class="metric-val" id="metric-steps">-</div>
-            <div class="metric-label">Langkah Terproses</div>
+            <div class="metric-label">Langkah</div>
           </div>
-          <div class="metric-box">
+          <div class="metric-item">
             <div class="metric-val" id="metric-recolor" style="color: #f87171;">0</div>
-            <div class="metric-label">Recolor Cost (Pos)</div>
+            <div class="metric-label">Recolor</div>
           </div>
         </div>
 
-        <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted);">Pembagian Beban Shift Patroli:</div>
-        <div class="shift-dist" id="shift-distribution">
-          <!-- Badge distribusi shift -->
-        </div>
+        <div class="shift-dist" id="shift-distribution"></div>
       </div>
-
-      <button class="btn btn-secondary" onclick="openBenchmarkModal()">
-        <span>📈</span> Lihat Benchmark 3 Algoritma
-      </button>
     </aside>
 
     <!-- Interactive Canvas Area -->
@@ -752,39 +942,36 @@
 
       <!-- In-canvas Event Banner -->
       <div class="event-banner" id="event-banner" style="display: none;">
-        <span class="event-banner-icon">⚠️</span>
         <div class="event-banner-text" id="event-banner-text"></div>
         <button class="event-banner-close" onclick="closeEventBanner()">&times;</button>
       </div>
 
       <!-- Canvas Overlays -->
       <div class="canvas-overlay">
-        <!-- Legend Shift -->
         <div class="legend-card" id="legend-box">
-          <span style="font-weight: 700; color: #fff;">Shift Patroli:</span>
-          <div class="legend-item"><div class="legend-dot" style="background: var(--shift-0);"></div> Shift 0</div>
-          <div class="legend-item"><div class="legend-dot" style="background: var(--shift-1);"></div> Shift 1</div>
-          <div class="legend-item"><div class="legend-dot" style="background: var(--shift-2);"></div> Shift 2</div>
-          <div class="legend-item" id="legend-shift-3" style="display: none;"><div class="legend-dot" style="background: var(--shift-3);"></div> Shift 3</div>
+          <span style="font-weight: 600; color: var(--text-main);">Shift:</span>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--shift-0);"></div> 0</div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--shift-1);"></div> 1</div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--shift-2);"></div> 2</div>
+          <div class="legend-item" id="legend-shift-3" style="display: none;"><div class="legend-dot" style="background: var(--shift-3);"></div> 3</div>
         </div>
 
-        <!-- Toolbar Zoom & View Controls -->
         <div class="zoom-toolbar">
-          <button class="tool-btn" id="btn-arrows" title="Toggle Arah Panah" onclick="toggleArrows()">⇄ Panah: Off</button>
-          <button class="tool-btn" id="btn-physics" title="Toggle Auto Physics" onclick="togglePhysics()">⚛️ Fisika: Off</button>
+          <button class="tool-btn" id="btn-arrows" title="Toggle Arah Panah" onclick="toggleArrows()">Panah: Off</button>
+          <button class="tool-btn" id="btn-physics" title="Toggle Auto Physics" onclick="togglePhysics()">Fisika: Off</button>
           <button class="tool-btn" title="Zoom In" onclick="zoomIn()">+</button>
           <button class="tool-btn" title="Zoom Out" onclick="zoomOut()">-</button>
-          <button class="tool-btn" title="Reset View (Fit)" onclick="resetView()">⛶ Fit</button>
+          <button class="tool-btn" title="Reset View (Fit)" onclick="resetView()">Fit</button>
         </div>
       </div>
 
-      <!-- Node Click Details Toast -->
+      <!-- Node Click Details -->
       <div class="node-detail-panel" id="node-panel">
         <div class="node-detail-header">
           <span id="detail-node-title">Pos Informasi</span>
-          <span style="cursor: pointer;" onclick="closeNodePanel()">&times;</span>
+          <span style="cursor: pointer; color: var(--text-muted);" onclick="closeNodePanel()">&times;</span>
         </div>
-        <div id="detail-node-content" style="color: #cbd5e1; line-height: 1.5;"></div>
+        <div id="detail-node-content" style="color: var(--text-secondary); line-height: 1.6;"></div>
       </div>
     </main>
 
@@ -794,11 +981,13 @@
   <div class="modal-overlay" id="benchmark-modal">
     <div class="modal-card">
       <div class="modal-header">
-        <span>📊 Tabel Perbandingan Benchmark Algoritma</span>
-        <button style="background: none; border: none; color: white; cursor: pointer; font-size: 16px;" onclick="closeBenchmarkModal()">&times;</button>
+        <span>Perbandingan Benchmark Algoritma</span>
+        <button style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px;" onclick="closeBenchmarkModal()">&times;</button>
       </div>
       <div id="benchmark-table-container">Memuat data perbandingan...</div>
-      <button class="btn btn-secondary" onclick="closeBenchmarkModal()">Tutup</button>
+      <div style="display: flex; justify-content: flex-end;">
+        <button class="btn btn-secondary" onclick="closeBenchmarkModal()">Tutup</button>
+      </div>
     </div>
   </div>
 
@@ -814,7 +1003,7 @@
     let currentStepIndex = 0;
     let isPlaying = false;
     let playInterval = null;
-    let animationDelay = 1000; // ms per step (default santai, enak dilihat saat presentasi)
+    let animationDelay = 1000;
     let showArrows = false;
     let enablePhysics = false;
 
@@ -837,16 +1026,26 @@
     let incidentBaselineRecolor = null;
 
     const COLOR_PALETTE = [
-      "#3b82f6", // Shift 0: Biru Terang
-      "#f97316", // Shift 1: Oranye Hangat
-      "#10b981", // Shift 2: Hijau Emerald
-      "#a855f7", // Shift 3: Ungu
-      "#ec4899", // Shift 4: Pink Neon
-      "#06b6d4", // Shift 5: Cyan
-      "#eab308"  // Shift 6: Kuning
+      "#3b82f6", // Shift 0
+      "#f97316", // Shift 1
+      "#10b981", // Shift 2
+      "#a855f7", // Shift 3
+      "#ec4899", // Shift 4
+      "#06b6d4", // Shift 5
+      "#eab308"  // Shift 6
     ];
 
-    const UNCOLORED_COLOR = "#334155";
+    const UNCOLORED_COLOR = "#2d3544";
+
+    const SVG_PLAY = '<svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor"><polygon points="2,1 11,6 2,11"/></svg>';
+    const SVG_PAUSE = '<svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor"><rect x="2" y="1" width="3" height="10"/><rect x="7" y="1" width="3" height="10"/></svg>';
+
+    function switchSidebarTab(tabName) {
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.remove("active"));
+      document.getElementById(`tab-btn-${tabName}`).classList.add("active");
+      document.getElementById(`tab-panel-${tabName}`).classList.add("active");
+    }
 
     function selectAlgorithm(algo) {
       if (currentAlgorithm === algo) return;
@@ -866,13 +1065,12 @@
       };
       document.getElementById("top-algo-badge").innerText = badgeNames[algo] || algo;
 
-      // Reload data dan mulai di langkah 0
       fetchAndSetupScenario(false);
     }
 
     async function onScenarioChanged() {
       const select = document.getElementById("scenario-select");
-      const text = select.options[select.selectedIndex].text.split("(")[0];
+      const text = select.options[select.selectedIndex].text.split("(")[0].trim();
       document.getElementById("top-scenario-badge").innerText = text;
       await fetchAndSetupScenario(true);
     }
@@ -891,7 +1089,6 @@
         const data = await resp.json();
         currentScenarioData = data;
 
-        // Inisialisasi slider batas atas
         const total = data.coloring_steps ? data.coloring_steps.length : 0;
         const slider = document.getElementById("step-slider");
         slider.max = total;
@@ -900,7 +1097,6 @@
 
         updateEvents(data.events || []);
 
-        // Render graf dalam kondisi netral / uncolored
         renderGraph(data, true);
         currentStepIndex = 0;
         applyStep(0);
@@ -916,7 +1112,6 @@
     function renderGraph(data, startUncolored = true) {
       const container = document.getElementById("network-canvas");
 
-      // Format Node untuk Vis.js dengan styling VOLUMETRIK
       const nodesArray = data.nodes.map(n => {
         const isKeyNode = /smk|rambay|desa|pasar|jembatan|bri|alfamart|polsek/i.test(n.full_label);
         const finalColor = COLOR_PALETTE[n.color_id % COLOR_PALETTE.length];
@@ -930,49 +1125,36 @@
           y: n.y,
           color: {
             background: bgColor,
-            border: isKeyNode ? "#ffffff" : "rgba(255,255,255,0.45)",
+            border: isKeyNode ? "#e6edf3" : "rgba(255,255,255,0.3)",
             highlight: { background: "#facc15", border: "#ffffff" }
           },
-          borderWidth: isKeyNode ? 4.5 : 3.0,
-          borderWidthSelected: 6.0,
-          shadow: {
-            enabled: true,
-            color: "rgba(0, 0, 0, 0.75)",
-            size: 14,
-            x: 2,
-            y: 5
-          },
+          borderWidth: isKeyNode ? 3 : 1.5,
+          borderWidthSelected: 4.5,
+          shadow: false,
           font: {
-            color: "#ffffff",
-            size: isKeyNode ? 15 : 12,
+            color: "#e6edf3",
+            size: isKeyNode ? 14 : 11,
             face: "Segoe UI, Inter, Arial",
-            bold: true,
-            strokeWidth: 3.5,
-            strokeColor: "#020617"
+            bold: isKeyNode,
+            strokeWidth: 2.5,
+            strokeColor: "#0f1217"
           },
           shape: "dot",
-          size: isKeyNode ? 38 : 26,
+          size: isKeyNode ? 32 : 22,
           full_label: n.full_label,
           shift: n.color_id,
           finalColor: finalColor
         };
       });
 
-      // Format Edge dengan styling TEBAL & VOLUMETRIK
       const edgesArray = data.edges.map(e => ({
         from: e.from,
         to: e.to,
-        color: { color: "#94a3b8", highlight: "#facc15", hover: "#38bdf8", opacity: 0.85 },
-        width: 3.5,
-        shadow: {
-          enabled: true,
-          color: "rgba(0, 0, 0, 0.5)",
-          size: 6,
-          x: 1,
-          y: 2
-        },
+        color: { color: "#4b5563", highlight: "#facc15", hover: "#60a5fa", opacity: 0.8 },
+        width: 2.5,
+        shadow: false,
         arrows: {
-          to: { enabled: showArrows, scaleFactor: 0.9 }
+          to: { enabled: showArrows, scaleFactor: 0.8 }
         },
         smooth: false
       }));
@@ -999,7 +1181,7 @@
           zoomView: true,
           dragView: true,
           dragNodes: true,
-          keyboard: false // Dikendalikan script mandiri
+          keyboard: false
         }
       };
 
@@ -1021,7 +1203,6 @@
         network.setOptions(options);
       }
 
-      // Reset view to fit
       setTimeout(() => {
         network.fit({ animation: { duration: 400 } });
       }, 50);
@@ -1038,13 +1219,11 @@
       targetIndex = Math.max(0, Math.min(targetIndex, total));
       currentStepIndex = targetIndex;
 
-      // Update Slider & Text
       document.getElementById("step-slider").value = targetIndex;
       document.getElementById("step-counter-text").innerText = `${targetIndex} / ${total}`;
       document.getElementById("btn-prev").disabled = targetIndex === 0;
       document.getElementById("btn-next").disabled = targetIndex >= total;
 
-      // Hitung warna simpul hingga langkah target
       const coloredMap = {};
       const uniqueColors = new Set();
       const shiftCounts = {};
@@ -1058,7 +1237,6 @@
 
       const lastStep = targetIndex > 0 ? steps[targetIndex - 1] : null;
 
-      // Batch update semua simpul
       const allNodes = nodeDataSet.get().filter(n => !n.isActorDot);
       const updates = allNodes.map(n => {
         const isKey = /smk|rambay|desa|pasar|jembatan|bri|alfamart|polsek/i.test(n.full_label || '');
@@ -1066,8 +1244,8 @@
         const isCurrentActive = lastStep && (n.id === lastStep.node_id);
 
         let bg = isColored ? COLOR_PALETTE[coloredMap[n.id] % COLOR_PALETTE.length] : UNCOLORED_COLOR;
-        let border = isCurrentActive ? "#facc15" : (isKey ? "#ffffff" : "rgba(255,255,255,0.45)");
-        let bWidth = isCurrentActive ? 6.5 : (isKey ? 4.5 : 3.0);
+        let border = isCurrentActive ? "#facc15" : (isKey ? "#e6edf3" : "rgba(255,255,255,0.3)");
+        let bWidth = isCurrentActive ? 5.0 : (isKey ? 3.0 : 1.5);
 
         return {
           id: n.id,
@@ -1079,13 +1257,11 @@
 
       nodeDataSet.update(updates);
 
-      // Update Metrik
       document.getElementById("metric-steps").innerText = targetIndex;
-      document.getElementById("metric-chi").innerText = targetIndex > 0 ? `${uniqueColors.size} Shift` : "-";
+      document.getElementById("metric-chi").innerText = targetIndex > 0 ? `${uniqueColors.size}` : "-";
       document.getElementById("metric-runtime").innerText = targetIndex === total ? `${currentScenarioData.runtime_ms} ms` : "-";
       renderDistribution(shiftCounts);
 
-      // Update Callout Penjelasan Langkah
       const detailBox = document.getElementById("step-detail-box");
       if (lastStep) {
         const nodeObj = currentScenarioData.nodes.find(n => n.id === lastStep.node_id);
@@ -1093,25 +1269,27 @@
         const shiftHex = COLOR_PALETTE[lastStep.color_id % COLOR_PALETTE.length];
 
         document.getElementById("step-detail-title").innerText = `Langkah #${targetIndex}: [${lastStep.node_id}] ${nodeName}`;
-        
+
         let extraInfo = "";
         if (lastStep.sat_deg !== undefined && lastStep.sat_deg !== null) {
-          extraInfo += `Saturation Degree (SatDeg): <strong>${lastStep.sat_deg}</strong> | `;
+          extraInfo += `SatDeg: <strong>${lastStep.sat_deg}</strong> · `;
         }
         if (lastStep.degree !== undefined && lastStep.degree !== null) {
-          extraInfo += `Derajat Titik (Degree): <strong>${lastStep.degree}</strong> | `;
+          extraInfo += `Derajat: <strong>${lastStep.degree}</strong> · `;
         }
 
         document.getElementById("step-detail-desc").innerHTML = `
           ${extraInfo}
-          Alokasi: <span style="display:inline-block; padding:1px 6px; border-radius:3px; background:${shiftHex}; color:#fff; font-weight:700;">Shift ${lastStep.color_id}</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;font-weight:600;color:#e6edf3;">
+            <span style="width:8px;height:8px;border-radius:50%;background:${shiftHex};display:inline-block;"></span>
+            Shift ${lastStep.color_id}
+          </span>
         `;
         detailBox.style.display = "block";
       } else {
         detailBox.style.display = "none";
       }
 
-      // Update UI button saat mencapai akhir
       if (targetIndex === total) {
         pause();
       }
@@ -1130,7 +1308,6 @@
       if (!currentScenarioData || !currentScenarioData.coloring_steps) return;
       const total = currentScenarioData.coloring_steps.length;
 
-      // Jika sudah di ujung akhir, ulangi dari langkah 0
       if (currentStepIndex >= total) {
         applyStep(0);
       }
@@ -1205,25 +1382,23 @@
       if (isPlaying) {
         btn.classList.remove("btn-primary");
         btn.classList.add("btn-warning");
-        icon.innerText = "⏸️";
-        text.innerText = "Jeda (Pause)";
+        icon.innerHTML = SVG_PAUSE;
+        text.innerText = "Jeda";
         status.innerText = "Berjalan";
-        status.style.background = "rgba(16, 185, 129, 0.2)";
+        status.style.background = "rgba(16, 185, 129, 0.15)";
         status.style.color = "#34d399";
       } else {
         btn.classList.remove("btn-warning");
         btn.classList.add("btn-primary");
-        icon.innerText = "▶️";
-        text.innerText = currentStepIndex >= total && total > 0 ? "Ulangi Pewarnaan" : (currentStepIndex > 0 ? "Lanjutkan" : "Jalankan Animasi");
+        icon.innerHTML = SVG_PLAY;
+        text.innerText = currentStepIndex >= total && total > 0 ? "Ulangi" : (currentStepIndex > 0 ? "Lanjutkan" : "Jalankan");
         status.innerText = currentStepIndex >= total && total > 0 ? "Selesai" : (currentStepIndex > 0 ? "Dijeda" : "Siaga");
-        status.style.background = "rgba(148, 163, 184, 0.15)";
+        status.style.background = "var(--bg-elevated)";
         status.style.color = "var(--text-muted)";
       }
     }
 
-    // Keyboard Shortcuts (Presentasi)
     window.addEventListener("keydown", function(e) {
-      // Abaikan jika fokus di input/select
       if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
 
       if (incidentData) {
@@ -1259,15 +1434,14 @@
       const distContainer = document.getElementById("shift-distribution");
       distContainer.innerHTML = "";
       if (!dist || Object.keys(dist).length === 0) {
-        distContainer.innerHTML = "<div style='font-size:11px; color:#64748b;'>Belum ada shift terisi.</div>";
+        distContainer.innerHTML = "<div style='font-size:11px; color:var(--text-muted);'>Belum ada shift terisi.</div>";
         return;
       }
       for (const [shift, count] of Object.entries(dist)) {
         const hex = COLOR_PALETTE[parseInt(shift) % COLOR_PALETTE.length];
         const b = document.createElement("div");
         b.className = "shift-badge";
-        b.style.backgroundColor = hex;
-        b.innerText = `Shift ${shift}: ${count} pos`;
+        b.innerHTML = `<span class="shift-dot" style="background:${hex};"></span>Shift ${shift}: ${count} pos`;
         distContainer.appendChild(b);
       }
     }
@@ -1277,14 +1451,14 @@
       container.innerHTML = "";
 
       if (!events || events.length === 0) {
-        container.innerHTML = "<div style='font-size:11px; color:#64748b;'>Tidak ada event dinamis.</div>";
+        container.innerHTML = "<div style='font-size:11px; color:var(--text-muted);'>Tidak ada event dinamis.</div>";
         return;
       }
 
       events.forEach((ev, idx) => {
         const btn = document.createElement("button");
-        btn.className = "btn btn-danger";
-        btn.innerHTML = `<span>⚡</span> ${ev.description.substring(0, 34)}...`;
+        btn.className = "btn btn-danger-outline";
+        btn.innerText = ev.description;
         btn.title = ev.description;
         btn.onclick = () => triggerEvent(idx);
         container.appendChild(btn);
@@ -1306,7 +1480,6 @@
         });
         const res = await resp.json();
 
-        // 1. Fokus kamera ke pusat bentrokan
         if (res.target_node !== undefined && res.target_node !== null) {
           network.focus(res.target_node, {
             scale: 1.15,
@@ -1314,16 +1487,14 @@
           });
         }
 
-        // 2. Pulse merah pada target node
         if (res.target_node !== undefined) {
           nodeDataSet.update({
             id: res.target_node,
             color: { background: "#ef4444", border: "#ffffff" },
-            borderWidth: 8.0
+            borderWidth: 6.0
           });
         }
 
-        // 3. Animasi recoloring simpul yang terganggu
         if (res.new_colors) {
           const changed = res.changed_nodes || [];
           for (const [nodeIdStr, colorId] of Object.entries(res.new_colors)) {
@@ -1336,23 +1507,22 @@
                 id: nodeId,
                 color: {
                   background: colorHex,
-                  border: isChanged ? "#facc15" : "#ffffff"
+                  border: isChanged ? "#facc15" : "#e6edf3"
                 },
-                borderWidth: isChanged ? 6.0 : 3.5,
+                borderWidth: isChanged ? 5.0 : 2.5,
                 shift: colorId
               });
             }, isChanged ? 250 : 0);
           }
         }
 
-        // 4. Update Metrik
-        document.getElementById("metric-chi").innerText = res.new_chromatic_number + " Shift";
+        document.getElementById("metric-chi").innerText = res.new_chromatic_number;
         document.getElementById("metric-recolor").innerText = res.recolor_cost;
 
-        // 5. Tampilkan alert banner modern in-canvas
-        showEventBanner(`<strong>⚡ [DYNAMIC EVENT TERPICU]:</strong> ${res.description}<br>
-          <span style="color:#fde047;">Pos Terdampak Recolor:</span> <strong>${res.recolor_cost} pos</strong> | 
-          <span style="color:#67e8f9;">Bilangan Kromatik:</span> <strong>${res.new_chromatic_number} Shift</strong>`);
+        showEventBanner(
+          `<strong>Event Dinamis Aktif:</strong> ${res.description}<br>` +
+          `Pos berubah shift: <strong>${res.recolor_cost} pos</strong> · Bilangan kromatik: <strong>${res.new_chromatic_number} Shift</strong>`
+        );
 
       } catch (err) {
         alert("Gagal memicu event: " + err);
@@ -1395,28 +1565,28 @@
       document.getElementById("incident-controls").style.display = "none";
       document.getElementById("incident-detail").style.display = "none";
       document.getElementById("risk-legend").style.display = "none";
-      document.getElementById("btn-risk-layer").innerText = "⚠️ Risk Layer: Off";
+      document.getElementById("btn-risk-layer").innerText = "Risk Layer: Off";
       document.getElementById("btn-risk-layer").classList.remove("active");
-      document.getElementById("btn-incident").innerText = "▶️ Putar Simulasi Kejadian";
+      document.getElementById("btn-incident").innerText = "Putar Simulasi";
       incidentBaselineColors = null;
       incidentBaselineRecolor = null;
     }
 
     function renderRiskLegend(labels) {
       document.getElementById("risk-legend-items").innerHTML =
-        `<div style="font-weight:700; color:#fff; margin-bottom:3px;">Peta Risiko Ruas (perkiraan)</div>` +
+        `<div style="font-weight:600; color:var(--text-main); margin-bottom:4px;">Peta Risiko Ruas (perkiraan)</div>` +
         [2, 1, 0].map(level =>
-          `<div><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${RISK_COLORS[level]};margin-right:6px;"></span>${labels[String(level)]}</div>`
+          `<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${RISK_COLORS[level]};flex-shrink:0;"></span><span>${labels[String(level)]}</span></div>`
         ).join("") +
-        `<div style="color:#94a3b8; margin-top:3px;">Berdasarkan 5 sumber berita; bukan status aman absolut.</div>`;
+        `<div style="color:var(--text-muted); margin-top:4px;">Berdasarkan 5 sumber berita; bukan status aman absolut.</div>`;
     }
 
     function restoreEdges() {
       if (!edgeDataSet) return;
       edgeDataSet.update(edgeDataSet.get().map(e => ({
         id: e.id,
-        color: { color: "#94a3b8", highlight: "#facc15", hover: "#38bdf8", opacity: 0.85 },
-        width: 3.5,
+        color: { color: "#4b5563", highlight: "#facc15", hover: "#60a5fa", opacity: 0.8 },
+        width: 2.5,
         dashes: false,
         title: "",
       })));
@@ -1429,7 +1599,7 @@
       }
       riskLayerOn = !riskLayerOn;
       const btn = document.getElementById("btn-risk-layer");
-      btn.innerText = `⚠️ Risk Layer: ${riskLayerOn ? "On" : "Off"}`;
+      btn.innerText = `Risk Layer: ${riskLayerOn ? "On" : "Off"}`;
       btn.classList.toggle("active", riskLayerOn);
       document.getElementById("risk-legend").style.display = riskLayerOn ? "block" : "none";
       if (!riskLayerOn) {
@@ -1449,7 +1619,7 @@
             hover: "#ffffff",
             opacity: level === 0 ? 0.7 : 0.95,
           },
-          width: level === 2 ? 5.5 : (level === 1 ? 4 : 2.5),
+          width: level === 2 ? 5.0 : (level === 1 ? 3.5 : 2.0),
           dashes: level === 0 ? [6, 6] : false,
           title: r ? `Risiko: ${r.reason}` : "Tidak ada catatan insiden pada sumber yang dibaca.",
         };
@@ -1461,7 +1631,7 @@
       let scenarioId = document.getElementById("scenario-select").value;
       if (scenarioId !== INCIDENT_SCENARIO_ID) {
         document.getElementById("scenario-select").value = INCIDENT_SCENARIO_ID;
-        document.getElementById("top-scenario-badge").innerText = "Graf 2: Google Maps (101 km)";
+        document.getElementById("top-scenario-badge").innerText = "Graf 2: Rute Riil Google Maps 101 km";
         await fetchAndSetupScenario(false);
       }
       pause();
@@ -1489,7 +1659,7 @@
         slider.value = 0;
         document.getElementById("incident-controls").style.display = "block";
         document.getElementById("incident-detail").style.display = "block";
-        document.getElementById("btn-incident").innerText = "↻ Muat Ulang Simulasi";
+        document.getElementById("btn-incident").innerText = "Muat Ulang";
         renderRiskLegend(data.risk_labels);
         toggleRiskLayer();
         applyIncidentStep(0, false);
@@ -1537,17 +1707,16 @@
           id: id,
           color: {
             background: COLOR_PALETTE[colorId % COLOR_PALETTE.length],
-            border: isChanged ? "#facc15" : "#ffffff",
+            border: isChanged ? "#facc15" : "#e6edf3",
           },
-          borderWidth: isChanged ? 6.0 : 3.5,
+          borderWidth: isChanged ? 5.0 : 2.5,
           shift: colorId,
         };
       });
       nodeDataSet.update(updates);
       showEventBanner(
-        `<strong>🚨 [KRONOLOGI SELESAI]:</strong> Bentrokan di Tagog Bayur.<br>` +
-        `<span style="color:#fde047;">Pos berubah shift:</span> <strong>${rec.recolor_cost} pos</strong> | ` +
-        `<span style="color:#67e8f9;">Bilangan kromatik:</span> <strong>${rec.chromatic_number} shift</strong>`
+        `<strong>Kronologi Selesai:</strong> Bentrokan di Tagog Bayur.<br>` +
+        `Pos berubah shift: <strong>${rec.recolor_cost} pos</strong> · Bilangan kromatik: <strong>${rec.chromatic_number} shift</strong>`
       );
     }
 
@@ -1560,7 +1729,7 @@
         phaseEl.innerText = "Kronologi Kejadian - Bersedia";
         narrativeEl.innerText =
           "Tiga titik penting: SMKN 1 Sagaranten (node 0), titik janji Jembatan Cibeureum (proxy node 9), dan TKP Kampung Tagog Bayur (proxy node 8).";
-        metaEl.innerHTML = `<span style="color:#94a3b8;">${incidentData.disclaimer}</span>`;
+        metaEl.innerHTML = `<span style="color:var(--text-muted);">${incidentData.disclaimer}</span>`;
         sourcesEl.innerHTML = "";
         return;
       }
@@ -1571,7 +1740,7 @@
         `Status: ${step.risk === 0 ? "relatif tenang menurut sumber" : "perlu perhatian"}`;
       sourcesEl.innerHTML =
         "Sumber: " + step.sources.map((url, i) =>
-          `<a href="${url}" target="_blank" rel="noopener" style="color:#7dd3fc;">[${i + 1}]</a>`
+          `<a href="${url}" target="_blank" rel="noopener" style="color:#60a5fa;">[${i + 1}]</a>`
         ).join(" ");
     }
 
@@ -1604,10 +1773,10 @@
             x: target ? target.x : 0,
             y: target ? target.y : 0,
             shape: "dot",
-            size: 17,
+            size: 16,
             color: { background: actor.color, border: "#ffffff" },
-            borderWidth: 2.5,
-            shadow: { enabled: true, color: actor.color, size: 24, x: 0, y: 0 },
+            borderWidth: 2,
+            shadow: { enabled: true, color: actor.color, size: 16, x: 0, y: 0 },
             font: { color: "transparent", size: 1 },
             physics: false,
             fixed: { x: true, y: true },
@@ -1641,14 +1810,14 @@
     function incidentPause() {
       incidentPlaying = false;
       clearInterval(incidentInterval);
-      document.getElementById("btn-incident-play").innerText = "▶️ Lanjut";
+      document.getElementById("btn-incident-play").innerText = "Lanjut";
     }
 
     function incidentPlay() {
       if (!incidentData) return;
       if (incidentStepIndex >= incidentData.steps.length) applyIncidentStep(0, false);
       incidentPlaying = true;
-      document.getElementById("btn-incident-play").innerText = "⏸️ Jeda";
+      document.getElementById("btn-incident-play").innerText = "Jeda";
       clearInterval(incidentInterval);
       incidentInterval = setInterval(() => {
         if (incidentStepIndex < incidentData.steps.length) {
@@ -1683,10 +1852,10 @@
       const panel = document.getElementById("node-panel");
       document.getElementById("detail-node-title").innerText = `Pos #${nodeData.id}`;
       document.getElementById("detail-node-content").innerHTML = `
-        <strong>Nama Pos:</strong> ${nodeData.full_label}<br>
-        <strong>Penugasan:</strong> <span style="color:${COLOR_PALETTE[nodeData.shift % COLOR_PALETTE.length] || '#fff'}; font-weight:700;">${nodeData.shift !== undefined ? 'Shift ' + nodeData.shift : 'Belum Terjadwal (Abu-abu)'}</span><br>
-        <strong>Koordinat Spasial:</strong> (${Math.round(nodeData.x)}, ${Math.round(nodeData.y)})<br>
-        <strong>Status:</strong> ${nodeData.shift !== undefined ? 'Terjadwal Aman' : 'Antrean Heuristik'}
+        <div><strong>Nama Pos:</strong> ${nodeData.full_label}</div>
+        <div><strong>Penugasan:</strong> <span style="color:${COLOR_PALETTE[nodeData.shift % COLOR_PALETTE.length] || '#e6edf3'}; font-weight:600;">${nodeData.shift !== undefined ? 'Shift ' + nodeData.shift : 'Belum Terjadwal'}</span></div>
+        <div><strong>Koordinat:</strong> (${Math.round(nodeData.x)}, ${Math.round(nodeData.y)})</div>
+        <div><strong>Status:</strong> ${nodeData.shift !== undefined ? 'Terjadwal' : 'Menunggu Pewarnaan'}</div>
       `;
       panel.style.display = "block";
     }
@@ -1698,13 +1867,13 @@
     function toggleArrows() {
       showArrows = !showArrows;
       const btn = document.getElementById("btn-arrows");
-      btn.innerText = `⇄ Panah: ${showArrows ? 'On' : 'Off'}`;
+      btn.innerText = `Panah: ${showArrows ? 'On' : 'Off'}`;
       btn.classList.toggle("active", showArrows);
 
       if (edgeDataSet) {
         const edges = edgeDataSet.get();
         edges.forEach(e => {
-          e.arrows = { to: { enabled: showArrows, scaleFactor: 0.9 } };
+          e.arrows = { to: { enabled: showArrows, scaleFactor: 0.8 } };
         });
         edgeDataSet.update(edges);
       }
@@ -1713,7 +1882,7 @@
     function togglePhysics() {
       enablePhysics = !enablePhysics;
       const btn = document.getElementById("btn-physics");
-      btn.innerText = `⚛️ Fisika: ${enablePhysics ? 'On' : 'Off'}`;
+      btn.innerText = `Fisika: ${enablePhysics ? 'On' : 'Off'}`;
       btn.classList.toggle("active", enablePhysics);
 
       if (network) {
@@ -1749,17 +1918,17 @@
               <th>Algoritma</th>
               <th>&chi;(G) Shift</th>
               <th>Runtime</th>
-              <th>Langkah (Steps)</th>
-              <th>Color Balance (Std)</th>
+              <th>Langkah</th>
+              <th>Balance (Std)</th>
             </tr>
           </thead>
           <tbody>`;
 
         data.comparison.forEach(row => {
           const isBest = row.algorithm_key === "dsatur";
-          html += `<tr style="${isBest ? 'background: rgba(59,130,246,0.18); font-weight:600;' : ''}">
-            <td>${row.name} ${isBest ? '⭐ (SOTA)' : ''}</td>
-            <td><strong>${row.chromatic_number} Shift</strong></td>
+          html += `<tr style="${isBest ? 'background: var(--accent-soft); font-weight:600;' : ''}">
+            <td>${row.name}${isBest ? '<span class="tag-sota">SOTA</span>' : ''}</td>
+            <td>${row.chromatic_number} Shift</td>
             <td>${row.runtime_ms} ms</td>
             <td>${row.steps}</td>
             <td>${row.color_balance_std}</td>
@@ -1767,8 +1936,8 @@
         });
 
         html += `</tbody></table>
-          <p style="font-size:11px; color:#94a3b8; line-height:1.4;">
-            <strong>Analisis Komparasi Dosen:</strong> DSATUR (Degree of Saturation) secara konsisten menghasilkan jumlah warna optimal (&chi;(G) terendah) dengan seleksi dinamis yang sangat adaptif terhadap kejadian insiden konflik tak terduga.
+          <p style="font-size:11px; color:var(--text-muted); line-height:1.5;">
+            <strong>Catatan Komparasi:</strong> DSATUR (Degree of Saturation) secara konsisten menghasilkan jumlah warna optimal (&chi;(G) terendah) dengan seleksi dinamis yang adaptif terhadap kejadian konflik tak terduga.
           </p>`;
         container.innerHTML = html;
       } catch (err) {
@@ -1780,7 +1949,6 @@
       document.getElementById("benchmark-modal").style.display = "none";
     }
 
-    // Eksekusi otomatis saat pertama dibuka
     window.onload = () => {
       fetchAndSetupScenario(false);
     };
